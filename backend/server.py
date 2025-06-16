@@ -168,6 +168,11 @@ async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(s
     user = await db.users.find_one({"email": email})
     if user is None:
         raise HTTPException(status_code=401, detail="User not found")
+    
+    # Convert MongoDB document to dict if it's not already
+    if not isinstance(user, dict):
+        user = dict(user)
+        
     return User(**user)
 
 # Authentication Routes
