@@ -200,7 +200,18 @@ async def register(user_data: UserCreate):
 @api_router.post("/auth/login", response_model=Token)
 async def login(user_credentials: UserLogin):
     user = await db.users.find_one({"email": user_credentials.email})
-    if not user or not verify_password(user_credentials.password, user["password"]):
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Incorrect email or password",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    
+    # Convert MongoDB document to dict if it's not already
+    if not isinstance(user, dict):
+        user = dict(user)
+        
+    if not verify_password(user_credentials.password, user.get("password", "")):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Incorrect email or password",
